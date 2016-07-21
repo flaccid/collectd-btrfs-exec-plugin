@@ -3,7 +3,9 @@
 Inspired from https://github.com/soellman/docker-collectd/blob/master/btrfs-data.py.
 
 ## Usage
-TODO
+
+See `exec-btrfs help`. Configure collectd to use the plugin
+as per https://collectd.org/wiki/index.php/Plugin:Exec.
 
 ## Build
 
@@ -30,7 +32,7 @@ Microsoft Windows:
 
     $ GOOS=windows GOARCH=amd64 go build exec-btrfs.go
 
-## Upstream Resources
+## Additional References
 
 - https://collectd.org/wiki/index.php/Plugin:Exec
 - https://collectd.org/wiki/index.php/Category:Exec_Plugins
