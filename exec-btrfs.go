@@ -81,16 +81,20 @@ func btrfsStats(m string) map[string]interface{} {
 		// these are 3 column exceptions to process
 		switch metric {
 		case "free_estimated":
-			freeEstimated := strings.TrimSpace(strings.Split(strings.Split(line, "):")[1], "(")[0])
+			freeEstimated := strings.TrimSpace(
+				strings.Split(strings.Split(line, "):")[1], "(")[0])
 			btrfs["free_estimated"] = freeEstimated
 		case "free_estimated_minimum":
-			freeEstimatedMin := strings.TrimSpace(strings.Replace(strings.Split(line, ":")[2], ")", "", -1))
+			freeEstimatedMin := strings.TrimSpace(
+				strings.Replace(strings.Split(line, ":")[2], ")", "", -1))
 			btrfs["free_estimated_minimum"] = freeEstimatedMin
 		case "global_reserve":
-			globalReserve := strings.TrimSpace(strings.Split(strings.Split(line, ":")[1], "(")[0])
+			globalReserve := strings.TrimSpace(
+				strings.Split(strings.Split(line, ":")[1], "(")[0])
 			btrfs["global_reserve"] = globalReserve
 		case "global_reserve_used":
-			globalReserveUsed := strings.TrimSpace(strings.Replace(strings.Split(line, ":")[2], ")", "", -1))
+			globalReserveUsed := strings.TrimSpace(
+				strings.Replace(strings.Split(line, ":")[2], ")", "", -1))
 			btrfs["global_reserve_used"] = globalReserveUsed
 		default:
 			right := strings.Split(line, ":")
@@ -110,6 +114,9 @@ func btrfsStats(m string) map[string]interface{} {
 }
 
 func main() {
+	localHostname, _ := os.Hostname()
+	defaultInterval := 20
+
 	app := cli.NewApp()
 	app.Name = "exec-btrfs"
 	app.Version = "v0.0.1"
@@ -121,16 +128,22 @@ func main() {
 		},
 	}
 	app.Copyright = "(c) 2016 Chris Fordham"
-	app.Usage = "BTRFS exec plugin for collectd ommitting btrfs stats"
+	app.Usage = "Btrfs exec plugin for collectd ommitting btrfs stats"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{Name: "hostname, H"},
-		cli.StringFlag{Name: "interval, i"},
+		cli.StringFlag{
+			Name:  "hostname, H",
+			Value: localHostname,
+		},
+		cli.IntFlag{
+			Name:  "interval, i",
+			Value: defaultInterval,
+		},
 	}
-
 	app.Action = func(c *cli.Context) error {
-		hostname, _ := os.Hostname()
-		interval := 20
-
+		if c.NArg() < 1 {
+			fmt.Println("Usage: exec-btrfs [global options] <mountpoint>")
+			os.Exit(1)
+		}
 		mountPoint := c.Args().Get(0)
 		mountPointSplit := strings.Split(mountPoint, "/")
 		fsName := mountPointSplit[len(mountPointSplit)-1]
@@ -143,10 +156,13 @@ func main() {
 			// fmt.Println("map:", btrfs)
 
 			for metric, value := range btrfs {
-				putVal(hostname, fsName, string(metric), interval, value.(string))
+				putVal(c.String("hostname"),
+					fsName, string(metric),
+					c.Int("interval"),
+					value.(string))
 			}
 
-			time.Sleep((time.Duration(interval) * 1000) * time.Millisecond)
+			time.Sleep((time.Duration(c.Int("interval")) * 1000) * time.Millisecond)
 		}
 	}
 
