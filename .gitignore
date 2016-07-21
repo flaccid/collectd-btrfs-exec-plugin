@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# locally compiled binaries
+exec-btrfs
+exec-btrfs.exe
