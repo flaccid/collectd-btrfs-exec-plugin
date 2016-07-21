@@ -128,7 +128,7 @@ func main() {
 		},
 	}
 	app.Copyright = "(c) 2016 Chris Fordham"
-	app.Usage = "Btrfs exec plugin for collectd ommitting Btrfs stats"
+	app.Usage = "Btrfs exec plugin for collectd emmitting Btrfs filesystem stats"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "hostname, H",
