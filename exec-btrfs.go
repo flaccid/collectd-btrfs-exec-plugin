@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,12 +22,12 @@ func findSubstring(word string, list []string) (int, bool) {
 }
 
 func putVal(hostname string, fsName string, metric string,
-	interval int, value int64) {
+	interval int, value string) {
 	fmt.Printf("PUTVAL %v/exec-btrfs_%v/gauge-%v interval=%v N:%v\n",
 		hostname, fsName, metric, interval, value)
 }
 
-func btrfsStats(m string) map[string]int64 {
+func btrfsStats(m string) map[string]interface{} {
 	btrfsPath := "/usr/bin/btrfs"
 	btrfsArgs := []string{"fi", "usage", "--raw", m}
 
@@ -47,16 +46,16 @@ func btrfsStats(m string) map[string]int64 {
 	btrfsLines := strings.Split(out.String(), "\n")
 
 	/*
-	  -- Example haystack --
-	  Device size:		   1.00GiB
-	  Device allocated:		 126.38MiB
-	  Device unallocated:		 897.62MiB
-	  Device missing:		     0.00B
-	  Used:			 256.00KiB
-	  Free (estimated):		 905.62MiB	(min: 456.81MiB)
-	  Data ratio:			      1.00
-	  Metadata ratio:		      2.00
-	  Global reserve:		  16.00MiB	(used: 0.00B)
+					  -- Example haystack --
+		        Device size:		        1073741824
+		        Device allocated:		         132513792
+		        Device unallocated:		         941228032
+		        Device missing:		                 0
+		        Used:			            262144
+		        Free (estimated):		         949616640	(min: 479002624)
+		        Data ratio:			              1.00
+		        Metadata ratio:		              2.00
+		        Global reserve:		          16777216	(used: 0)
 	*/
 
 	btrfsHay := make(map[string]string)
@@ -72,7 +71,7 @@ func btrfsStats(m string) map[string]int64 {
 	btrfsHay["global_reserve"] = "Global reserve:"
 	btrfsHay["global_reserve_used"] = "Global reserve:"
 
-	btrfs := make(map[string]int64)
+	btrfs := make(map[string]interface{})
 
 	for metric, needle := range btrfsHay {
 		i, _ := findSubstring(needle, btrfsLines)
@@ -82,41 +81,29 @@ func btrfsStats(m string) map[string]int64 {
 		// these are 3 column exceptions to process
 		switch metric {
 		case "free_estimated":
-			freeEstimated, _ := strconv.ParseInt(strings.TrimSpace(strings.Split(strings.Split(line, "):")[1], "(")[0]), 10, 64)
+			freeEstimated := strings.TrimSpace(strings.Split(strings.Split(line, "):")[1], "(")[0])
 			btrfs["free_estimated"] = freeEstimated
 		case "free_estimated_minimum":
-			freeEstimatedMin, _ := strconv.ParseInt(strings.TrimSpace(strings.Replace(strings.Split(line, ":")[2], ")", "", -1)), 10, 64)
+			freeEstimatedMin := strings.TrimSpace(strings.Replace(strings.Split(line, ":")[2], ")", "", -1))
 			btrfs["free_estimated_minimum"] = freeEstimatedMin
 		case "global_reserve":
-			globalReserve, _ := strconv.ParseInt(strings.TrimSpace(strings.Split(strings.Split(line, ":")[1], "(")[0]), 10, 64)
+			globalReserve := strings.TrimSpace(strings.Split(strings.Split(line, ":")[1], "(")[0])
 			btrfs["global_reserve"] = globalReserve
 		case "global_reserve_used":
-			globalReserveUsed, _ := strconv.ParseInt(strings.TrimSpace(strings.Replace(strings.Split(line, ":")[2], ")", "", -1)), 10, 64)
+			globalReserveUsed := strings.TrimSpace(strings.Replace(strings.Split(line, ":")[2], ")", "", -1))
 			btrfs["global_reserve_used"] = globalReserveUsed
 		default:
 			right := strings.Split(line, ":")
 
-			// get the final right column which should contain the human metric
-			initialValue := strings.TrimSpace(right[len(right)-1])
-
-			// oh no, its got [i]B
-			if strings.Contains(initialValue, "B") {
-				totalBytes := initialValue
-
-				v, _ := strconv.ParseInt(totalBytes, 10, 64)
-
-				btrfs[metric] = v
-			} else {
-				metricValue, _ := strconv.ParseFloat(initialValue, 64)
-				btrfs[metric] = int64(metricValue)
-			}
+			// get the final right column which should contain the human value
+			btrfs[metric] = strings.TrimSpace(right[len(right)-1])
 
 			// debug only
-			// fmt.Printf("*************** %v %v %v %v %v\n\n", metric, needle, i, found, line)
+			// fmt.Printf("debug: [%v] [%v] [%v] [%v]\n\n", metric, needle, i, line)
 		}
 
 		// do you get this?
-		btrfs["inodes"] = int64(0)
+		btrfs["inodes"] = "0"
 	}
 
 	return btrfs
@@ -156,7 +143,7 @@ func main() {
 			// fmt.Println("map:", btrfs)
 
 			for metric, value := range btrfs {
-				putVal(hostname, fsName, metric, interval, value)
+				putVal(hostname, fsName, string(metric), interval, value.(string))
 			}
 
 			time.Sleep((time.Duration(interval) * 1000) * time.Millisecond)
