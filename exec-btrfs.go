@@ -22,6 +22,12 @@ func findSubstring(word string, list []string) (int, bool) {
 	return -1, false
 }
 
+func putVal(hostname string, fsName string, metric string,
+	interval int, value int64) {
+	fmt.Printf("PUTVAL %v/exec-btrfs_%v/gauge-%v interval=%v N:%v\n",
+		hostname, fsName, metric, interval, value)
+}
+
 func btrfsStats(m string) map[string]int64 {
 	btrfsPath := "/usr/bin/btrfs"
 	btrfsArgs := []string{"fi", "usage", "--raw", m}
@@ -107,7 +113,7 @@ func btrfsStats(m string) map[string]int64 {
 				metricValue, _ := strconv.ParseFloat(initialValue, 64)
 				btrfs[metric] = int64(metricValue)
 			}
-			
+
 			// debug only
 			// fmt.Printf("*************** %v %v %v %v %v\n\n", metric, needle, i, found, line)
 		}
@@ -153,7 +159,7 @@ func main() {
 			// fmt.Println("map:", btrfs)
 
 			for metric, value := range btrfs {
-				fmt.Printf("PUTVAL %v/exec-btrfs_%v/gauge-%v interval=%v N:%v\n", hostname, fsName, metric, interval, value)
+				putVal(hostname, fsName, metric, interval, value)
 			}
 
 			time.Sleep((time.Duration(interval) * 1000) * time.Millisecond)
