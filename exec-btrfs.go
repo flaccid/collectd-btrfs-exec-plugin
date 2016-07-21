@@ -103,9 +103,6 @@ func btrfsStats(m string) map[string]int64 {
 			if strings.Contains(initialValue, "B") {
 				totalBytes := initialValue
 
-				// we round and assign as integer assuming that the float reported
-				// from btrfs is always 2 floating points so can be innacurate, thus
-				// potential for fractions of a byte!
 				v, _ := strconv.ParseInt(totalBytes, 10, 64)
 
 				btrfs[metric] = v
