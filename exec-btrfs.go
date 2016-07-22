@@ -28,7 +28,14 @@ func putVal(hostname string, fsName string, metric string,
 }
 
 func btrfsStats(m string) map[string]interface{} {
-	btrfsPath := "/usr/bin/btrfs"
+	// sane paths
+	os.Setenv("PATH",
+		os.Getenv("PATH")+":/usr/bin:/usr/local/bin:/opt/local/bin:/sbin:/usr/sbin")
+
+	btrfsPath, err := exec.LookPath("btrfs")
+	if err != nil {
+		log.Fatal("cannot find the btrfs command in a common path")
+	}
 	btrfsArgs := []string{"fi", "usage", "--raw", m}
 
 	var out bytes.Buffer
@@ -36,7 +43,7 @@ func btrfsStats(m string) map[string]interface{} {
 
 	cmd := exec.Command(btrfsPath, btrfsArgs...)
 	cmd.Stdout = &out
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
 		log.Fatal(err)
