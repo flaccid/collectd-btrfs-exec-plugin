@@ -7,6 +7,19 @@ Inspired from https://github.com/soellman/docker-collectd/blob/master/btrfs-data
 See `exec-btrfs help`. Configure collectd to use the plugin
 as per https://collectd.org/wiki/index.php/Plugin:Exec.
 
+#### Btrfs in Loopback
+
+For testing, you may like to use an image mounted in loopback to save
+the need to create a partition and filesystem on a physical disk.
+
+```shell
+dd if=/dev/zero of=/tmp/btrfs-vol0.img bs=1G count=1
+losetup /dev/loop0 /tmp/btrfs-vol0.img
+sudo mkfs.btrfs /dev/loop0
+mkdir /tmp/btrfs-loop
+mount /dev/loop0 /tmp/btrfs-loop
+```
+
 ## Build
 
     $ go install github.com/flaccid/collectd-btrfs-exec-plugin
