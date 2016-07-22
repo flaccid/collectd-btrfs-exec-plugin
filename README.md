@@ -2,6 +2,10 @@
 
 Inspired from https://github.com/soellman/docker-collectd/blob/master/btrfs-data.py.
 
+## Installation
+
+    $ go get "github.com/flaccid/collectd-btrfs-exec-plugin"
+
 ## Usage
 
 See `exec-btrfs help`. Configure collectd to use the plugin
