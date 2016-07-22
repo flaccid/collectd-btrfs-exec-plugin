@@ -1,6 +1,14 @@
 #! /usr/bin/sh -e
 
+: "${COLLECTD_BTRFS_USERID:=nobody}"
 : "${COLLECTD_BTRFS_INTERVAL:=15}"
+: "${COLLECTD_BTRFS_SETUP:=true}"
+: "${COLLECTD_BTRFS_SUDO:=false}"
+
+if [ "$COLLECTD_BTRFS_SETUP" != 'true' ]; then
+  echo '$COLLECTD_BTRFS_SETUP not set to true, skipping.'
+  exit 0
+fi
 
 . "$RS_ATTACH_DIR/rs_distro.sh"
 
@@ -24,15 +32,27 @@ sudo mkdir -p /usr/local/bin
 sudo cp -f "$RS_ATTACH_DIR/exec-btrfs" /usr/local/bin/
 sudo chmod +x /usr/local/bin/exec-btrfs
 
+plugin_exec='"/usr/local/bin/exec-btrfs"'
+
+if [ "$COLLECTD_BTRFS_SUDO" = 'true' ]; then
+  plugin_exec='"sudo" "/usr/local/bin/exec-btrfs"'
+fi
+
 read -r -d '' conf <<EOF
 LoadPlugin exec
 <Plugin exec>
-  #     userid     plugin executable             plugin args
-  Exec  "nobody"   "/usr/local/bin/exec-btrfs"   -H "$SERVER_UUID" -i "$COLLECTD_BTRFS_INTERVAL" "$COLLECTD_BTRFS_EXEC_MOUNTPOINT"
+  #     userid                     plugin executable             plugin args
+  Exec  "$COLLECTD_BTRFS_USERID"   $plugin_exec   "-H" "$SERVER_UUID" "-i" "$COLLECTD_BTRFS_INTERVAL" "$COLLECTD_BTRFS_EXEC_MOUNTPOINT"
 </Plugin>
 EOF
 
 echo "$conf" | sudo tee $exec_plugin_conf
+
+# so non-root user can read the mountpoint
+if [ "$COLLECTD_BTRFS_EXEC_MOUNTPOINT" = '/var/lib/docker' ]; then
+  echo 'Relaxing permissions on /var/lib/docker'
+  sudo chmod 0755 /var/lib/docker
+fi
 
 echo 'Restarting collectd.'
 if type service >/dev/null 2>&1; then
