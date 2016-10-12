@@ -23,7 +23,7 @@ func findSubstring(word string, list []string) (int, bool) {
 
 func putVal(hostname string, fsName string, metric string,
 	interval int, value string) {
-	fmt.Printf("PUTVAL %v/exec-btrfs_%v/gauge-%v interval=%v N:%v\n",
+	fmt.Printf("PUTVAL %v/exec-btrfs-%v/gauge-%v interval=%v N:%v\n",
 		hostname, fsName, metric, interval, value)
 }
 
@@ -152,8 +152,7 @@ func main() {
 			os.Exit(1)
 		}
 		mountPoint := c.Args().Get(0)
-		mountPointSplit := strings.Split(mountPoint, "/")
-		fsName := mountPointSplit[len(mountPointSplit)-1]
+		fsName := strings.Replace(mountPoint, "/", "-", -1)[1:]
 
 		// main output loop
 		for {
