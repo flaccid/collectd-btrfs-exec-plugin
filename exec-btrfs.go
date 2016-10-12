@@ -27,10 +27,38 @@ func putVal(hostname string, fsName string, metric string,
 		hostname, fsName, metric, interval, value)
 }
 
+func getSupportedMetrics() []string {
+	metrics := []string{
+		"device_unallocated",
+		"free_estimated",
+		"data_ratio",
+		"used",
+		"global_reserve",
+		"inodes",
+		"reserve_used",
+		"device_allocated",
+		"metadata_ratio",
+		"device_size",
+		"device_missing",
+		"free_estimated_minimum",
+	}
+	return metrics
+}
+
 func btrfsStats(m string) map[string]interface{} {
 	// sane paths
 	os.Setenv("PATH",
 		os.Getenv("PATH")+":/usr/bin:/usr/local/bin:/opt/local/bin:/sbin:/usr/sbin")
+
+	// currently we'll return NaN for all if we can't read the mountpoint
+	if _, err := os.Open(m); err != nil {
+		metrics := getSupportedMetrics()
+		btrfs := make(map[string]interface{})
+		for _, e := range metrics {
+			btrfs[e] = "NaN"
+		}
+		return btrfs
+	}
 
 	btrfsPath, err := exec.LookPath("btrfs")
 	if err != nil {
