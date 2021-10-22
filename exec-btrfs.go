@@ -185,6 +185,23 @@ func main() {
 			fsName = "root"
 		}
 
+		hostname := c.String("hostname")
+		if (hostname == localHostname) {
+			envCollecdHostname := os.Getenv("COLLECTD_HOSTNAME")
+			if len(envCollecdHostname) > 0 {
+				hostname = envCollecdHostname
+			}
+		}
+
+		interval := c.Int("interval")
+		envCollectdInterval := os.Getenv("COLLECTD_INTERVAL")
+		if len(envCollectdInterval) > 0 {
+			_, err := fmt.Sscan(envCollectdInterval, &interval)
+			if err != nil {
+				interval = c.Int("interval")
+			}
+		}
+
 		// main output loop
 		for {
 			btrfs := btrfsStats(mountPoint)
@@ -193,9 +210,9 @@ func main() {
 			// fmt.Println("map:", btrfs)
 
 			for metric, value := range btrfs {
-				putVal(c.String("hostname"),
+				putVal(hostname,
 					fsName, string(metric),
-					c.Int("interval"),
+					interval,
 					value.(string))
 			}
 
