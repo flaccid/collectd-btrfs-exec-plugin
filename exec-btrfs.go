@@ -156,8 +156,8 @@ func main() {
 	app.Name = "exec-btrfs"
 	app.Version = "v0.0.1"
 	app.Compiled = time.Now()
-	app.Authors = []cli.Author{
-		cli.Author{
+	app.Authors = []*cli.Author{
+		&cli.Author{
 			Name:  "Chris Fordham",
 			Email: "chris@fordham-nagy.id.au",
 		},
@@ -165,11 +165,11 @@ func main() {
 	app.Copyright = "(c) 2016 Chris Fordham"
 	app.Usage = "Btrfs exec plugin for collectd emmitting Btrfs filesystem stats"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "hostname, H",
 			Value: localHostname,
 		},
-		cli.IntFlag{
+		&cli.IntFlag{
 			Name:  "interval, i",
 			Value: defaultInterval,
 		},
