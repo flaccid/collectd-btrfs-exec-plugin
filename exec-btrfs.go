@@ -181,6 +181,9 @@ func main() {
 		}
 		mountPoint := c.Args().Get(0)
 		fsName := strings.Replace(mountPoint, "/", "-", -1)[1:]
+		if (mountPoint == "/") {
+			fsName = "root"
+		}
 
 		// main output loop
 		for {
