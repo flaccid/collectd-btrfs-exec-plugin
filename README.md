@@ -4,7 +4,7 @@ Inspired from https://github.com/soellman/docker-collectd/blob/master/btrfs-data
 
 ## Installation
 
-    $ go get "github.com/flaccid/collectd-btrfs-exec-plugin"
+    $ go get "github.com/mbideau/collectd-btrfs-exec-plugin"
 
 ## Usage
 
@@ -26,7 +26,7 @@ mount /dev/loop0 /tmp/btrfs-loop
 
 ## Build
 
-    $ go install github.com/flaccid/collectd-btrfs-exec-plugin
+    $ go install github.com/mbideau/collectd-btrfs-exec-plugin
 
 Or, build the binary locally within the repository folder:
 
@@ -56,10 +56,11 @@ Microsoft Windows:
 
 License and Authors
 -------------------
-- Author: Chris Fordham (<chris@fordham-nagy.id.au>)
+- Original Author: Chris Fordham (<chris@fordham-nagy.id.au>)
+- Fixes and improvments: Michael Bideau (<mica.devel@gmail.com>)
 
 ```text
-Copyright 2016, Chris Fordham
+Copyright 2016-2021, Chris Fordham and Michael Bideau
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
