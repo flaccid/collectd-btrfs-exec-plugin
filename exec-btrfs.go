@@ -156,8 +156,8 @@ func main() {
 	app.Name = "exec-btrfs"
 	app.Version = "v0.0.1"
 	app.Compiled = time.Now()
-	app.Authors = []cli.Author{
-		cli.Author{
+	app.Authors = []*cli.Author{
+		&cli.Author{
 			Name:  "Chris Fordham",
 			Email: "chris@fordham-nagy.id.au",
 		},
@@ -165,11 +165,11 @@ func main() {
 	app.Copyright = "(c) 2016 Chris Fordham"
 	app.Usage = "Btrfs exec plugin for collectd emmitting Btrfs filesystem stats"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "hostname, H",
 			Value: localHostname,
 		},
-		cli.IntFlag{
+		&cli.IntFlag{
 			Name:  "interval, i",
 			Value: defaultInterval,
 		},
@@ -181,6 +181,26 @@ func main() {
 		}
 		mountPoint := c.Args().Get(0)
 		fsName := strings.Replace(mountPoint, "/", "-", -1)[1:]
+		if (mountPoint == "/") {
+			fsName = "root"
+		}
+
+		hostname := c.String("hostname")
+		if (hostname == localHostname) {
+			envCollecdHostname := os.Getenv("COLLECTD_HOSTNAME")
+			if len(envCollecdHostname) > 0 {
+				hostname = envCollecdHostname
+			}
+		}
+
+		interval := c.Int("interval")
+		envCollectdInterval := os.Getenv("COLLECTD_INTERVAL")
+		if len(envCollectdInterval) > 0 {
+			_, err := fmt.Sscan(envCollectdInterval, &interval)
+			if err != nil {
+				interval = c.Int("interval")
+			}
+		}
 
 		// main output loop
 		for {
@@ -190,9 +210,9 @@ func main() {
 			// fmt.Println("map:", btrfs)
 
 			for metric, value := range btrfs {
-				putVal(c.String("hostname"),
+				putVal(hostname,
 					fsName, string(metric),
-					c.Int("interval"),
+					interval,
 					value.(string))
 			}
 
